@@ -24,6 +24,17 @@ app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// Custom console logger
+app.use((req, res, next) => {
+  const url = req.url;
+  const method = req.method;
+  const requestedAt = new Date().toLocaleTimeString();
+  const result = `${method} ${url} ${requestedAt}`;
+  console.log(result);
+
+  next();
+});
+
 
 // const initalizePassport = require('./passport-config')
 // initalizePassport(
