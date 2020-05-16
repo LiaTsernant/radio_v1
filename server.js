@@ -3,12 +3,26 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // --- Auth & JWT server setup----
-// const express = require('express')
-// const app = express()
+const express = require('express');
+const bodyParser = require('body-parser');
+const app = express();
+const PORT = process.env.PORT || 4000;
 // const bcrypt = require('bcrypt')
 // const passport = require('passport')
 // const flash = require('express-flash')
 // const session = require('express-session')
+
+//Database will accept requests from the main server
+const corsOptions = {
+  origin: ["https://localhost:5500"],
+  methods: "GET, POST, PUT, DELETE",
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 
 // const initalizePassport = require('./passport-config')
