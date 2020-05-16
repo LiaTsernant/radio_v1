@@ -1,15 +1,16 @@
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
-
 // --- Auth & JWT server setup----
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 4000;
 const cors = require('cors');
-const db = require("./models")
-// const bcrypt = require('bcrypt')
+const db = require("./models");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 // const passport = require('passport')
 // const flash = require('express-flash')
 // const session = require('express-session')
@@ -37,6 +38,57 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/', (req, res) => {
+    res.render('index.ejs', {host: 'BK'})
+})
+
+app.get('/login', (req, res) => {
+    res.render('login.ejs')
+})
+
+app.get('/register', (req, res) => {
+  res.render('register.ejs')
+})
+
+app.post('/register', (req, res) => {
+  db.User.findOne({ email: req.body.email }, (err, foundUser) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
+    if (foundUser) return res.status(404).json({ status: 404, error: "Account already registered." });
+
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
+
+      bcrypt.hash(req.body.password, salt, (err, hash) => {
+        if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
+        const userInfo = {
+          accountName: req.body.accountName,
+          email: req.body.email,
+          password: hash
+        };
+
+        db.User.create(userInfo, (err, savedUser) => {
+          if (err) return res.status(500).json(err);
+
+          const token = jwt.sign(
+            {
+              email: savedUser.email,
+              _id: savedUser._id
+            },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "30 days"
+            },
+          );
+
+          return res.status(200).json({
+            message: 'User Created',
+            token: token
+          })
+        });
+      });
+    });
+  });
+})
 
 // const initalizePassport = require('./passport-config')
 // initalizePassport(
@@ -60,39 +112,11 @@ app.use((req, res, next) => {
 
 //----Passport Login System----
 
-// app.get('/', (req, res) => {
-//     res.render('index.ejs', {host: 'BK'})
-// })
-
-// app.get('/login', (req, res) => {
-//     res.render('login.ejs')
-// })
-
 // app.post('/login', passport.authenticate('local',{
 //     successRedirect: '/',
 //     failureRedirect: '/login',
 //     failureFlash: true
 // }))
-
-// app.get('/register', (req, res) => {
-//     res.render('register.ejs')
-// })
-
-// app.post('/register', async (req, res) => {
-//   try {
-//       const hashedPassword = await bcrypt.hash(req.body.password, 10)
-//       accounts.push ({
-//           is: Date.now().toString(),
-//           name: req.body.accountName,
-//           email: req.body.email,
-//           password: hashedPassword
-//       })
-//       res.redirect('/login')
-//   } catch {
-//       res.redirect('/regiester')
-//   }
-//   console.log(accounts)
-// })
 
 // //Auth 
 
