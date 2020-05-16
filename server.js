@@ -11,6 +11,7 @@ const db = require("./models");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+
 // const passport = require('passport')
 // const flash = require('express-flash')
 // const session = require('express-session')
@@ -38,6 +39,8 @@ app.use((req, res, next) => {
   next();
 });
 
+// ---------- VIEWS ----------
+
 app.get('/', (req, res) => {
     res.render('index.ejs', {host: 'BK'})
 })
@@ -49,6 +52,8 @@ app.get('/login', (req, res) => {
 app.get('/register', (req, res) => {
   res.render('register.ejs')
 })
+
+// ---------- POST ----------
 
 app.post('/register', (req, res) => {
   db.User.findOne({ email: req.body.email }, (err, foundUser) => {
@@ -82,10 +87,40 @@ app.post('/register', (req, res) => {
 
           return res.status(200).json({
             message: 'User Created',
-            token: token
+            token
           })
         });
       });
+    });
+  });
+})
+
+app.post('/login', (req, res) => {
+  db.User.findOne({ email: req.body.email }, (err, foundUser) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot login a user" });
+    if (!foundUser) return res.status(404).json({ status: 404, error: "Invalid credentials." });
+
+    bcrypt.compare(req.body.password, foundUser.password, (err, isMatch) => {
+      if (err) return res.status(404).json({ status: 404, error: "Cannot login a user" });
+      if (isMatch) {
+        const token = jwt.sign(
+          {
+            email: foundUser.email,
+            _id: foundUser._id
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "30 days"
+          },
+        );
+        return res.status(200).json({
+          status: 200,
+          message: 'User Logged In',
+          token
+        });
+      } else {
+        res.status(404).json({ status: 404, error: "Cannot login. Please, try again." });
+      };
     });
   });
 })
