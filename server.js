@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 4000;
 const cors = require('cors');
+const db = require("./models")
 // const bcrypt = require('bcrypt')
 // const passport = require('passport')
 // const flash = require('express-flash')
