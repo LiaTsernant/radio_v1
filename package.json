@@ -1,15 +1,18 @@
 {
   "name": "basics",
   "version": "1.0.0",
-  "description": "",
+  "description": "npm i express jsonwebtoken dotenv",
   "main": "index.js",
   "scripts": {
-    "devStart": "nodemon server.js"
+    "devStart": "nodemon server.js",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^4.0.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "ejs": "^3.0.2",
     "express": "^4.17.1",
@@ -21,6 +24,14 @@
     "socket.io": "^2.3.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.3"
-  }
+    "nodemon": "^2.0.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reflective-refuge/radio_v1.git"
+  },
+  "bugs": {
+    "url": "https://github.com/reflective-refuge/radio_v1/issues"
+  },
+  "homepage": "https://github.com/reflective-refuge/radio_v1#readme"
 }
