@@ -167,3 +167,5 @@ io.on('connect', socket => {
         delete users[socket.id]
     })
 })
+
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}/`));
