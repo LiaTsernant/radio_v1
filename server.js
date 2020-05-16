@@ -53,6 +53,13 @@ app.get('/register', (req, res) => {
   res.render('register.ejs')
 })
 
+app.get('/users', (req, res) => {
+  db.User.find({}).populate('country', '_id name emergency police firefighters').exec((err, foundUsers) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot find all users" });
+    res.json(foundUsers);
+  });
+})
+
 // ---------- POST ----------
 
 app.post('/register', (req, res) => {
@@ -113,11 +120,7 @@ app.post('/login', (req, res) => {
             expiresIn: "30 days"
           },
         );
-        return res.status(200).json({
-          status: 200,
-          message: 'User Logged In',
-          token
-        });
+        return res.render('index.ejs', { host: foundUser.accountName });
       } else {
         res.status(404).json({ status: 404, error: "Cannot login. Please, try again." });
       };
