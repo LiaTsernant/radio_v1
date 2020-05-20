@@ -12,10 +12,6 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// const passport = require('passport')
-// const flash = require('express-flash')
-// const session = require('express-session')
-
 //Database will accept requests from the main server
 const corsOptions = {
   origin: ["https://localhost:5500"],
@@ -150,92 +146,7 @@ app.post('/login', (req, res) => {
       };
     });
   });
-})
-
-// const initalizePassport = require('./passport-config')
-// initalizePassport(
-//     passport, 
-//     email => accounts.find(account => account.email === email)
-// )
-
-// app.use(express.json())
-// app.set('view-engine', 'ejs')
-// app.use(express.urlencoded({ extended: false}))
-// app.use(flash())
-// app.use(session({
-//     secret: process.eventNames.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false
-// }))
-// app.use(passport.initialize())
-// app.use(passport.session())
-
-// const accounts = []
-
-//----Passport Login System----
-
-// app.post('/login', passport.authenticate('local',{
-//     successRedirect: '/',
-//     failureRedirect: '/login',
-//     failureFlash: true
-// }))
-
-// //Auth 
-
-// app.get('/accounts', (req, res) => {
-//     res.json(accounts)
-// })
-
-// app.post('/accounts', async (req, res) => {
-//     try {
-//         const salt =  await bcrypt.genSalt()
-//         const hashedPassword = await bcrypt.hash(req.body.password, salt)
-//         const account = { accountName: req.body.accountName, password: hashedPassword }
-//         accounts.push(account)
-//         res.status(201).send()
-
-//     } catch {
-//         res.status(500).send()
-//     }
-// })
-
-// app.post('/accounts/login', async (req, res) => {
-//     const account = accounts.find(account => account.accountName = req.body.accountName)
-//     if (account == null) {
-//         return res.status(400).send('Cant Not Find Account')
-//     }
-//     try {
-//         if(await bcrypt.compare(req.body.password, account.password)) {
-//             res.send('Succesfully Loged In')
-//         } else {
-//             res.send('Not Allowed')
-//         }
-//     } catch {
-//         res.status(500).send()
-//     }
-// })
-
-// //JWT 
-// const posts =[
-//     {
-//         username:'BK',
-//         title: 'Sample Post'
-//     },
-//     {
-//         username:'Pippa',
-//         title: 'Sample Post2'
-//     },
-// ]
-// app.get('/posts', (req, res) =>{
-//     res.json(posts)
-// })
-
-// app.get('/login', (req,res) => {
-//     //Authenticate User
-// })
-
-// app.listen(8080)
-
+});
 
 // -----Socket io Server Setup-----
 const io = require('socket.io')(3000)
