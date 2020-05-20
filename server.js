@@ -42,8 +42,32 @@ app.use((req, res, next) => {
 // ---------- VIEWS ----------
 
 app.get('/', (req, res) => {
-    res.render('index.ejs', {host: 'BK'})
+  res.sendFile('Radio_Homepage.html', {
+    root: __dirname
+  });
+});
+
+app.get('/host_login', (req, res) => {
+  res.sendFile('Radio_HostLogin.html', {
+    root: __dirname
+  });
+});
+
+app.get('/on_now', (req, res) => {
+  res.sendFile('Radio_EventPage.html', {
+    root: __dirname
+  });
 })
+
+app.get('/script.js', (req, res) => {
+  res.sendFile('script.js', {
+    root: __dirname
+  });
+})
+
+// app.get('/', (req, res) => {
+//     res.render('index.ejs', {host: 'BK'})
+// })
 
 app.get('/login', (req, res) => {
     res.render('login.ejs')
