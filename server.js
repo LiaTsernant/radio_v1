@@ -43,34 +43,34 @@ app.get('/', (req, res) => {
   });
 });
 
-app.get('/host_login', (req, res) => {
-  res.sendFile('Radio_HostLogin.html', {
-    root: __dirname
-  });
-});
-
 app.get('/on_now', (req, res) => {
   res.sendFile('Radio_EventPage.html', {
     root: __dirname
   });
 })
 
-app.get('/script.js', (req, res) => {
-  res.sendFile('script.js', {
+app.get('/host_login', (req, res) => {
+  res.sendFile('Radio_HostLogin.html', {
+    root: __dirname
+  });
+});
+
+app.get('/login', (req, res) => {
+  res.sendFile('views/user_login.html', {
     root: __dirname
   });
 })
 
-// app.get('/', (req, res) => {
-//     res.render('index.ejs', {host: 'BK'})
-// })
-
-app.get('/login', (req, res) => {
-    res.render('login.ejs')
+app.get('/host_event', (req, res) => {
+  res.sendFile('Radio_Host_EventPage.html', {
+    root: __dirname
+  });
 })
 
 app.get('/register', (req, res) => {
-  res.render('register.ejs')
+  res.sendFile('views/user_register.html', {
+    root: __dirname
+  });
 })
 
 app.get('/users', (req, res) => {
@@ -80,9 +80,23 @@ app.get('/users', (req, res) => {
   });
 })
 
+// ***************** SPOTIFY ****************
+app.get('/spotify_auth', function (req, res) {
+  let redirect_uri = process.env.REDIRECT_URI;
+  let scopes = 'user-read-private user-read-email playlist-read-private';
+  res.redirect('https://accounts.spotify.com/authorize' +
+    '?response_type=code' +
+    '&client_id=' + process.env.CLIENT_ID +
+    (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
+    '&redirect_uri=' + encodeURIComponent(redirect_uri));
+});
+
+
+
+
 // ---------- POST ----------
 
-app.post('/register', (req, res) => {
+app.post('/api/v1/register', (req, res) => {
   db.User.findOne({ email: req.body.email }, (err, foundUser) => {
     if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
     if (foundUser) return res.status(404).json({ status: 404, error: "Account already registered." });
@@ -111,18 +125,19 @@ app.post('/register', (req, res) => {
               expiresIn: "30 days"
             },
           );
+          // return res.status(200).json({
+          //   message: 'User Created',
+          //   token
+          // })
 
-          return res.status(200).json({
-            message: 'User Created',
-            token
-          })
+          return res.status(200).json({ status: 200, token })
         });
       });
     });
   });
 })
 
-app.post('/login', (req, res) => {
+app.post('/api/v1/login', (req, res) => {
   db.User.findOne({ email: req.body.email }, (err, foundUser) => {
     if (err) return res.status(404).json({ status: 404, error: "Cannot login a user" });
     if (!foundUser) return res.status(404).json({ status: 404, error: "Invalid credentials." });
@@ -140,13 +155,37 @@ app.post('/login', (req, res) => {
             expiresIn: "30 days"
           },
         );
-        return res.render('index.ejs', { host: foundUser.accountName });
+        // return res.render('index.ejs', { host: foundUser.accountName });
+        return res.status(200).json({ status: 200, token })
       } else {
         res.status(404).json({ status: 404, error: "Cannot login. Please, try again." });
       };
     });
   });
 });
+
+
+// ******************************** SCRIPTS REQUESTS ************************** 
+
+app.get('/script.js', (req, res) => {
+  res.sendFile('script.js', {
+    root: __dirname
+  });
+})
+
+app.get('/public/scripts/user_login.js', (req, res) => {
+  res.sendFile('public/scripts/user_login.js', {
+    root: __dirname
+  });
+})
+
+app.get('/public/scripts/user_register.js', (req, res) => {
+  res.sendFile('public/scripts/user_register.js', {
+    root: __dirname
+  });
+})
+
+// *****************************************************************************
 
 // -----Socket io Server Setup-----
 const io = require('socket.io')(3000)
