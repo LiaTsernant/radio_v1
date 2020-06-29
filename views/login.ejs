@@ -1,8 +1,9 @@
 <h1>Login</h1> 
 
-<% if (messages.error) { %>
-    <%= messages.error %>
-  <% } %>
+
+<% if (typeof messages != 'undefined' && messages.error) { %>
+  <%= messages.error %>
+<% } %>
 
 <form action="/login" method="POST">
     <div>

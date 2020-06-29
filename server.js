@@ -1,18 +1,16 @@
 if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config()
 }
-
 // --- Auth & JWT server setup----
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 4000;
 const cors = require('cors');
-const db = require("./models")
-// const bcrypt = require('bcrypt')
-// const passport = require('passport')
-// const flash = require('express-flash')
-// const session = require('express-session')
+const db = require("./models");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 //Database will accept requests from the main server
 const corsOptions = {
@@ -37,119 +35,157 @@ app.use((req, res, next) => {
   next();
 });
 
+// ---------- VIEWS ----------
 
-// const initalizePassport = require('./passport-config')
-// initalizePassport(
-//     passport, 
-//     email => accounts.find(account => account.email === email)
-// )
+app.get('/', (req, res) => {
+  res.sendFile('Radio_Homepage.html', {
+    root: __dirname
+  });
+});
 
-// app.use(express.json())
-// app.set('view-engine', 'ejs')
-// app.use(express.urlencoded({ extended: false}))
-// app.use(flash())
-// app.use(session({
-//     secret: process.eventNames.SESSION_SECRET,
-//     resave: false,
-//     saveUninitialized: false
-// }))
-// app.use(passport.initialize())
-// app.use(passport.session())
+app.get('/on_now', (req, res) => {
+  res.sendFile('Radio_EventPage.html', {
+    root: __dirname
+  });
+})
 
-// const accounts = []
+app.get('/host_login', (req, res) => {
+  res.sendFile('Radio_HostLogin.html', {
+    root: __dirname
+  });
+});
 
-//----Passport Login System----
+app.get('/login', (req, res) => {
+  res.sendFile('views/user_login.html', {
+    root: __dirname
+  });
+})
 
-// app.get('/', (req, res) => {
-//     res.render('index.ejs', {host: 'BK'})
-// })
+app.get('/host_event', (req, res) => {
+  res.sendFile('Radio_Host_EventPage.html', {
+    root: __dirname
+  });
+})
 
-// app.get('/login', (req, res) => {
-//     res.render('login.ejs')
-// })
+app.get('/register', (req, res) => {
+  res.sendFile('views/user_register.html', {
+    root: __dirname
+  });
+})
 
-// app.post('/login', passport.authenticate('local',{
-//     successRedirect: '/',
-//     failureRedirect: '/login',
-//     failureFlash: true
-// }))
+app.get('/users', (req, res) => {
+  db.User.find({}).populate('country', '_id name emergency police firefighters').exec((err, foundUsers) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot find all users" });
+    res.json(foundUsers);
+  });
+})
 
-// app.get('/register', (req, res) => {
-//     res.render('register.ejs')
-// })
+// ***************** SPOTIFY ****************
+app.get('/spotify_auth', function (req, res) {
+  let redirect_uri = process.env.REDIRECT_URI;
+  let scopes = 'user-read-private user-read-email playlist-read-private';
+  res.redirect('https://accounts.spotify.com/authorize' +
+    '?response_type=code' +
+    '&client_id=' + process.env.CLIENT_ID +
+    (scopes ? '&scope=' + encodeURIComponent(scopes) : '') +
+    '&redirect_uri=' + encodeURIComponent(redirect_uri));
+});
 
-// app.post('/register', async (req, res) => {
-//   try {
-//       const hashedPassword = await bcrypt.hash(req.body.password, 10)
-//       accounts.push ({
-//           is: Date.now().toString(),
-//           name: req.body.accountName,
-//           email: req.body.email,
-//           password: hashedPassword
-//       })
-//       res.redirect('/login')
-//   } catch {
-//       res.redirect('/regiester')
-//   }
-//   console.log(accounts)
-// })
 
-// //Auth 
 
-// app.get('/accounts', (req, res) => {
-//     res.json(accounts)
-// })
 
-// app.post('/accounts', async (req, res) => {
-//     try {
-//         const salt =  await bcrypt.genSalt()
-//         const hashedPassword = await bcrypt.hash(req.body.password, salt)
-//         const account = { accountName: req.body.accountName, password: hashedPassword }
-//         accounts.push(account)
-//         res.status(201).send()
+// ---------- POST ----------
 
-//     } catch {
-//         res.status(500).send()
-//     }
-// })
+app.post('/api/v1/register', (req, res) => {
+  db.User.findOne({ email: req.body.email }, (err, foundUser) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
+    if (foundUser) return res.status(404).json({ status: 404, error: "Account already registered." });
 
-// app.post('/accounts/login', async (req, res) => {
-//     const account = accounts.find(account => account.accountName = req.body.accountName)
-//     if (account == null) {
-//         return res.status(400).send('Cant Not Find Account')
-//     }
-//     try {
-//         if(await bcrypt.compare(req.body.password, account.password)) {
-//             res.send('Succesfully Loged In')
-//         } else {
-//             res.send('Not Allowed')
-//         }
-//     } catch {
-//         res.status(500).send()
-//     }
-// })
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
 
-// //JWT 
-// const posts =[
-//     {
-//         username:'BK',
-//         title: 'Sample Post'
-//     },
-//     {
-//         username:'Pippa',
-//         title: 'Sample Post2'
-//     },
-// ]
-// app.get('/posts', (req, res) =>{
-//     res.json(posts)
-// })
+      bcrypt.hash(req.body.password, salt, (err, hash) => {
+        if (err) return res.status(404).json({ status: 404, error: "Cannot register user." });
+        const userInfo = {
+          accountName: req.body.accountName,
+          email: req.body.email,
+          password: hash
+        };
 
-// app.get('/login', (req,res) => {
-//     //Authenticate User
-// })
+        db.User.create(userInfo, (err, savedUser) => {
+          if (err) return res.status(500).json(err);
 
-// app.listen(8080)
+          const token = jwt.sign(
+            {
+              email: savedUser.email,
+              _id: savedUser._id
+            },
+            process.env.JWT_SECRET,
+            {
+              expiresIn: "30 days"
+            },
+          );
+          // return res.status(200).json({
+          //   message: 'User Created',
+          //   token
+          // })
 
+          return res.status(200).json({ status: 200, token })
+        });
+      });
+    });
+  });
+})
+
+app.post('/api/v1/login', (req, res) => {
+  db.User.findOne({ email: req.body.email }, (err, foundUser) => {
+    if (err) return res.status(404).json({ status: 404, error: "Cannot login a user" });
+    if (!foundUser) return res.status(404).json({ status: 404, error: "Invalid credentials." });
+
+    bcrypt.compare(req.body.password, foundUser.password, (err, isMatch) => {
+      if (err) return res.status(404).json({ status: 404, error: "Cannot login a user" });
+      if (isMatch) {
+        const token = jwt.sign(
+          {
+            email: foundUser.email,
+            _id: foundUser._id
+          },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "30 days"
+          },
+        );
+        // return res.render('index.ejs', { host: foundUser.accountName });
+        return res.status(200).json({ status: 200, token })
+      } else {
+        res.status(404).json({ status: 404, error: "Cannot login. Please, try again." });
+      };
+    });
+  });
+});
+
+
+// ******************************** SCRIPTS REQUESTS ************************** 
+
+app.get('/script.js', (req, res) => {
+  res.sendFile('script.js', {
+    root: __dirname
+  });
+})
+
+app.get('/public/scripts/user_login.js', (req, res) => {
+  res.sendFile('public/scripts/user_login.js', {
+    root: __dirname
+  });
+})
+
+app.get('/public/scripts/user_register.js', (req, res) => {
+  res.sendFile('public/scripts/user_register.js', {
+    root: __dirname
+  });
+})
+
+// *****************************************************************************
 
 // -----Socket io Server Setup-----
 const io = require('socket.io')(3000)
